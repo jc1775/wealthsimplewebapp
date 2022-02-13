@@ -21,7 +21,7 @@
                     <h2 class="text-danger">Authorization Failed! Please enter correct information.</h2>
                     <% } %>
                         <label for="" class="input-label ">Email</label>
-                        <input type="email" class="form-control" name="email" id="email" required autofocus <%if (errors.otp==='One time password needed' ) { %> readonly value="
+                        <input autocomplete="off" type="email" class="form-control" name="email" id="email" required autofocus <%if (errors.otp==='One time password needed' ) { %> readonly value="
                         <%=email %>"
                             <% } %> >
 

@@ -1,9 +1,11 @@
 const trade = require('wstrade-api');
 const { Chart } = require('chart.js')
 const chartAnnotations = require('chartjs-plugin-annotation')
-var tradeAccounts
-var holdings
-var recentAccountHistory
+const url = require('url')
+let tradeAccounts
+let holdings
+let recentAccountHistory
+let focusedAccount
 
 const update_stock_get = async(req, res) => {
     const ticker = req.params.ticker
@@ -26,7 +28,7 @@ const stock_page_get = async(req, res) => {
     var requestedStockData
     var stock_history
     if (typeof holdings === 'undefined') {
-        holdings = await trade.accounts.positions('tfsa-duhnzvfn')
+        holdings = await trade.accounts.positions(focusedAccount)
     }
     ticker = req.params.ticker
     exchange = req.params.exchange
@@ -63,7 +65,7 @@ const update_dash_get = async(req, res) => {
     const range = req.params.range
     console.log(range)
 
-    accountHistory = await get_account_history('tfsa-duhnzvfn', range)
+    accountHistory = await get_account_history(focusedAccount, range)
     recentAccountHistory = accountHistory.most_recent
     fullAccountHistory = accountHistory.account_history
         //Graph Stuff
@@ -78,25 +80,59 @@ const update_dash_get = async(req, res) => {
     res.json(context)
 }
 
-const dashboard_get = async(req, res) => {
-    tradeAccounts = await trade.accounts.all();
-    holdings = await trade.accounts.positions('tfsa-duhnzvfn')
-    accountHistory = await get_account_history('tfsa-duhnzvfn', '1d')
+const get_account_name = (account) => {
+    var name
+    if (account.includes('crypto')) {
+        name = 'Crypto'
+    } else if (account.includes('tfsa')) {
+        name = 'TFSA'
+    } else if (account.includes('rrsp')) {
+        name = 'RRSP'
+    } else {
+        name = 'Personal'
+    }
+    return name
+}
+
+const dashboard_get_context = async(account = null) => {
+    console.log(tradeAccounts)
+    console.log("Currently Viewing: ", focusedAccount)
+    holdings = await trade.accounts.positions(focusedAccount)
+    accountHistory = await get_account_history(focusedAccount, '1d')
     recentAccountHistory = accountHistory.most_recent
     fullAccountHistory = accountHistory.account_history
         //Graph Stuff
     const config = await init_account_chart(fullAccountHistory)
         ///////////End Graph Stuff
 
+        console.log(get_account_name(focusedAccount))
     context = {
+        tradeAccounts: tradeAccounts,
         title: "Dashboard",
+        currentAccount: get_account_name(focusedAccount),
         holdings: holdings,
         recentAccountHistory: recentAccountHistory,
         graphConfig: JSON.stringify(config),
         stringedHoldings: JSON.stringify(holdings),
     }
 
-    res.render('dashboard', context)
+    return context
+}
+
+const dashboard_get = async(req, res) => {
+    const queryObject = url.parse(req.url, true).query
+    const account = queryObject.account
+    tradeAccounts = await trade.accounts.all();
+    focusedAccount = account != null ? tradeAccounts[account.toLowerCase()] : tradeAccounts.personal
+    if (account && focusedAccount != undefined) {
+        context = await dashboard_get_context(focusedAccount)
+        res.render('dashboard', context)
+    } else {
+        if (focusedAccount == undefined) {
+            focusedAccount = tradeAccounts.personal
+        }
+        res.redirect("/dashboard?account=" + get_account_name(focusedAccount))
+    }
 }
 
 const get_stock_history = async(ticker, exchange, range) => {
@@ -177,10 +213,10 @@ const init_account_chart = async(account_history) => {
                     yScaleID: 'yAxis',
                     yMax: maxValue,
                     yMin: 0,
-                    xMax: newDataSet[0].x,
-                    xMin: newDataSet[0].x,
+                    xMax: newDataSet[0]?.x,
+                    xMin: newDataSet[0]?.x,
                     label: {
-                        content: [new Date(newDataSet[0].x).toString().slice(0, 24), "Portfolio value", ("$ " + (newDataSet[0].y.toFixed(2).toString()))],
+                        content: [new Date(newDataSet[0]?.x).toString().slice(0, 24), "Portfolio value", ("$ " + (newDataSet[0]?.y?.toFixed(2)?.toString()))],
                         position: 'end',
                         enabled: true,
                         textAlign: 'center',
@@ -190,7 +226,7 @@ const init_account_chart = async(account_history) => {
                 },
                 point1: {
                     type: 'point',
-                    xValue: newDataSet[0].x,
+                    xValue: newDataSet[0]?.x,
                     yValue: maxValue,
                     xScaleID: 'xAxis',
                     yScaleID: 'yAxis',
@@ -210,8 +246,8 @@ const init_account_chart = async(account_history) => {
                     grid: { display: false, drawBorder: false },
                     type: 'timeseries',
                     ticks: { display: false },
-                    min: newDataSet[0].x,
-                    max: newDataSet[newDataSet.length - 1].x
+                    min: newDataSet[0]?.x,
+                    max: newDataSet[newDataSet.length - 1]?.x
                 },
                 yAxis: {
                     grid: { display: false, drawBorder: false },

@@ -52,3 +52,9 @@
 .hidden {
     display: none;
 }
+
+.dropdown-menu[data-bs-popper] {
+    left: unset;
+    right: 0;
+    min-width: unset;
+}

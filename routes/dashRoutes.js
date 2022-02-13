@@ -11,5 +11,4 @@ router.get('/update/:range', authMiddleware.requireAuth, dashController.update_d
 
 router.get('/stock/update/:exchange/:ticker/:range', authMiddleware.requireAuth, dashController.update_stock_get)
 
-
 module.exports = router;

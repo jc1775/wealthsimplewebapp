@@ -1,8 +1,6 @@
 const express = require('express');
 const morgan = require('morgan');
-const mongoose = require('mongoose')
 const { render } = require('ejs');
-const blogRoutes = require('./routes/blogRoutes')
 const authRoutes = require('./routes/authRoutes')
 const dashRoutes = require('./routes/dashRoutes')
 const authMiddleware = require('./middleware/authMiddleware')
@@ -10,15 +8,6 @@ const cookieParser = require('cookie-parser')
 
 
 const app = express();
-const dbURI = 'mongodb+srv://jcalarco:1775kkui@cluster0.cctlo.mongodb.net/node-js-test?retryWrites=true&w=majority'
-
-// mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true })
-//     .then((result) => {
-//         console.log("connected to mongodb");
-//         app.listen(3000);
-//     })
-//     .catch((err) => { console.log(err) });
-
 app.listen(3000);
 console.log("listening")
 
@@ -41,7 +30,6 @@ app.get('/', (req, res) => {
     res.redirect('/signin')
 })
 
-app.use('/blogs', blogRoutes);
 app.use('/dashboard', dashRoutes)
 app.use('/', authRoutes)
 

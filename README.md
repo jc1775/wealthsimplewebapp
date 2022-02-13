@@ -4,16 +4,17 @@ This was a project I took on in order to explore the ins and outs of Node.js and
 
 # Technology
 
-### Node.js
+## Node.js
+Node was used here as the underlying backend server for this application.
 
-### Express.js
+## Express.js
+Express.js is used to handle routing as well as templating.
 
-### MongoDB
+## Javascript
+Javascript is the language of choice for this application. 
 
-### Javascript
-
-### Chartjs
-
+## Chartjs
+All of the charts used in this application are built using Chartjs with some modifications to better suit them for the broken format of stock data.
 
 # Challenges
 

@@ -1,4 +1,4 @@
-# WealthSimple Desktop using PyQT5
+# WealthSimple WebApp
 
 ## Index:
 - [Technology](#technology)
